@@ -14,6 +14,8 @@ Set up the backend:
   venv\Scripts\activate #for WindowsPowerShell
   pip install -r requirements.txt
 ```
+Create .env file with KEY
+
 Run Application
 ```bash
   python app.py
@@ -24,4 +26,3 @@ Set up frontend in new termnial:
   npm install
   npm start
 ```
-Create .env file with KEY
