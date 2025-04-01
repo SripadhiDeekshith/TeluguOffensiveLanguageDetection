@@ -24,3 +24,4 @@ Set up frontend in new termnial:
   npm install
   npm start
 ```
+Create .env file with KEY
