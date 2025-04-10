@@ -1,42 +1,65 @@
-
 import Axios from "axios";
 
-// Configure Axios to include cookies with each request
+// Ensure cookies (session) are sent with every request
 Axios.defaults.withCredentials = true;
 
+/**
+ * Attempt to log in a user.
+ * @param {string} email  - User's email address.
+ * @param {string} pwd    - User's password.
+ * @returns {Promise<true|string|Error>} 
+ *   - true on success,
+ *   - error message string on invalid credentials,
+ *   - or throws on network/other errors.
+ */
 async function login(email, pwd) {
-    try {
-        const res = await Axios.post("/api/login", { email, pwd });
-        const { data } = res;
-        if (data.error) {
-            return data.error;
-        } else {
-            // On success, the server sets a session cookie automatically.
-            return true;
-        }
-    } catch (error) {
-        return error;
+  try {
+    const { data } = await Axios.post("/api/login", { email, pwd });
+    if (data.error) {
+      return data.error;
     }
+    // Mark session as active in localStorage
+    localStorage.setItem("sessionActive", "true");
+    return true;
+  } catch (err) {
+    // Propagate error for caller to handle
+    return err;
+  }
 }
 
+/**
+ * Check current session validity.
+ * @returns {Promise<object|false>}
+ *   - User data object if logged in,
+ *   - false if not authenticated or on error.
+ */
 async function check() {
-    try {
-        const res = await Axios.get("/api/getcurrentuser", { withCredentials: true });
-        return res.data;
-    } catch (error) {
-        console.error("Not logged in", error);
-        return false;
-    }
+  try {
+    const res = await Axios.get("/api/getcurrentuser");
+    // Session cookie is valid
+    localStorage.setItem("sessionActive", "true");
+    return res.data;
+  } catch (err) {
+    // Clear any stale session flag
+    localStorage.removeItem("sessionActive");
+    console.error("Not logged in:", err);
+    return false;
+  }
 }
 
+/**
+ * Log out the current user.
+ * Clears session on server and redirects to /login.
+ */
 function logout() {
-    Axios.post("/api/logout", {}, { withCredentials: true })
-        .then(res => {
-            window.location = "/login";
-        })
-        .catch(err => {
-            console.error(err);
-        });
+  Axios.post("/api/logout")
+    .then(() => {
+      // Redirect to login page
+      window.location.href = "/login";
+    })
+    .catch((err) => {
+      console.error("Logout failed:", err);
+    });
 }
 
 export { login, check, logout };
